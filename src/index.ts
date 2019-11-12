@@ -9,17 +9,15 @@ import { Session, Kernel } from "@jupyterlab/services";
 
 import { ITopBar } from "jupyterlab-topbar";
 
-import { Button } from "@blueprintjs/core";
+import { InputDialog } from "@jupyterlab/apputils";
 
-import { ReactWidget, InputDialog } from "@jupyterlab/apputils";
-
-import {Widget} from '@phosphor/widgets';
+import { Widget } from '@phosphor/widgets';
 
 interface INotificationsSettingsManager {
   minExecutionTime: number;
-  buttonWidget: ReactWidget;
+  button: HTMLDivElement;
   enabled: boolean;
-  checkObject: HTMLInputElement;
+  checkBox: HTMLInputElement;
   handleClick(): void;
   handleToggle(): void;
 }
@@ -27,40 +25,40 @@ interface INotificationsSettingsManager {
 function spawnNotification(body: string, title: string, icon: string) {
   let options = {
     body: body,
-    // icon: icon,
+    // icon: 'https://ml.lyft.net/static/img/python.png',
   };
   new Notification(title, options);
 }
 
 export class NotificationManager implements INotificationsSettingsManager {
   minExecutionTime: number;
-  buttonWidget: ReactWidget;
+  button: HTMLDivElement;
   enabled: boolean;
-  checkObject: HTMLInputElement;
-  checkWidget: Widget;
-
+  checkBox: HTMLInputElement;
 
   constructor(topBar: ITopBar) {
 
-    this.minExecutionTime = parseInt(localStorage['jupyter-notifier/minExecutionTime'] || '5');
-    this.enabled = (localStorage['jupyter-notifier/enabled'] || 'true') == 'true';
-    const button: Button = new Button({
-      text: `notifying > ${this.minExecutionTime} seconds`,
-      type: 'button',
-      icon: 'notifications',
-      onClick: () => { this.handleClick() }
-    });
-    this.buttonWidget = ReactWidget.create(button.render());
-    topBar.addItem("notification-button", this.buttonWidget);
+    this.minExecutionTime = parseInt(localStorage['jupyter-notifier/minExecutionTime'] || '60');
+    this.enabled = (localStorage['jupyter-notifier/enabled'] || 'false') == 'true';
 
-    this.checkObject = document.createElement('input');
-    this.checkObject.type = 'checkbox';
-    this.checkObject.checked = this.enabled;
-    this.checkObject.onclick = this.handleToggle;
-    this.checkObject.textContent = "Notifications Enabled";
+    const div: HTMLDivElement = document.createElement('div');
+    div.setAttribute('display', 'inline');
+    div.classList.add('notify-topbar');
 
-    this.checkWidget = new Widget({ node: this.checkObject });
-    topBar.addItem('notification-toggle', this.checkWidget);
+    this.checkBox = document.createElement('input');
+    this.checkBox.type = 'checkbox';
+    this.checkBox.checked = this.enabled;
+    this.checkBox.onclick = () => { this.handleToggle() };
+    this.checkBox.textContent = "Notifications Enabled";
+
+    this.button = document.createElement('div');
+    this.button.classList.add('fa', 'fa-bell');
+    this.button.textContent = `notifying > ${this.minExecutionTime} seconds`;
+    this.button.onclick = () => { this.handleClick() };
+
+    div.appendChild(this.checkBox);
+    div.appendChild(this.button);
+    topBar.addItem('notifications', new Widget({ node: div }));
   };
 
   handleClick(): void {
@@ -70,13 +68,13 @@ export class NotificationManager implements INotificationsSettingsManager {
     }).then(value => {
       this.minExecutionTime = value.value;
       localStorage['jupyter-notifier/minExecutionTime'] = value.value.toString();
-      this.buttonWidget.node.firstChild.textContent = `notifying > ${this.minExecutionTime} seconds`;
+      this.button.textContent = `notifying > ${this.minExecutionTime} seconds`;
     });
   }
 
   handleToggle(): void {
     this.enabled = ! this.enabled;
-    this.checkObject.checked = this.enabled;
+    this.checkBox.checked = this.enabled;
     localStorage['jupyter-notifier/enabled'] = this.enabled.toString();
   };
 }
@@ -92,31 +90,20 @@ const extension: JupyterFrontEndPlugin<void> = {
       app: JupyterFrontEnd,
       topBar: ITopBar
   ) => {
-    console.log('JupyterLab extension jupyterlab-notifier is activated!');
 
     const sessions = app.serviceManager.sessions;
     const kernelStatuses: { [email: string]: Kernel.IModel } = {};
-    const manager: NotificationManager = new NotificationManager(topBar);
-
-    Notification.requestPermission().then(function(result) {
-      console.log(result);
-    });
+    const notifySettings: NotificationManager = new NotificationManager(topBar);
 
     const onRunningChanged = (
         sender: Session.IManager,
         models: Session.IModel[]
     ) => {
-      console.log('sender', sender);
-      console.log('models', models);
 
       models.forEach(( session: Session.IModel ) => {
-        if (!manager.enabled) {
-          return;
-        }
         const newKernel: Kernel.IModel = session.kernel;
         const oldKernel: Kernel.IModel = _.get(kernelStatuses, [newKernel.id]);
-        if (_.get(newKernel, ['execution_state']) === 'idle' &&
-            _.get(oldKernel, ['execution_state']) === 'busy') {
+        if (notifySettings.enabled && _.get(newKernel, ['execution_state']) === 'idle') {
 
           const newTimeString: string = _.get(newKernel, ['last_activity'], '0').toString();
           const newTime: number = Date.parse(newTimeString);
@@ -124,7 +111,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
           if (oldTime != newTime) {
             const elapsedTime: number = newTime - oldTime;
-            if (elapsedTime > 10000) {
+            if (elapsedTime > notifySettings.minExecutionTime * 1000) {
               spawnNotification(`${session.name} Finished Execution`, 'Execution complete', 'jupyter.png');
             }
           }

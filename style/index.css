@@ -1,0 +1,9 @@
+.notify-topbar {
+    display: inline !important;
+}
+
+.notify-btn {
+  padding: 3px 12px;
+  font-size: 15px;
+  cursor: pointer;
+}
