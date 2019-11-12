@@ -10,7 +10,7 @@ notifications for jupyterlab
 ## Install
 
 ```bash
-jupyter labextension install jupyterlab-notifier
+./install.sh
 ```
 
 ## Contributing
