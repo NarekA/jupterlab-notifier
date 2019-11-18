@@ -10,12 +10,20 @@ notifications for jupyterlab
 ## Install
 
 ```bash
-./install.sh
+jupyter labextension install jupyterlab-topbar-extension jupyterlab-notifier
 ```
 
 ## Contributing
 
 ### Install
+
+Using npm
+```bash
+jupyter labextension install jupyterlab-topbar-extension
+npm install
+npm run build
+jupyter labextension install .
+```
 
 The `jlpm` command is JupyterLab's pinned version of
 [yarn](https://yarnpkg.com/) that is installed with JupyterLab. You may use
@@ -24,6 +32,10 @@ The `jlpm` command is JupyterLab's pinned version of
 ```bash
 # Clone the repo to your local environment
 # Move to jupyterlab-notifier directory
+
+# Install jupyterlab-topbar-extension
+jupyter labextension install jupyterlab-topbar-extension
+
 # Install dependencies
 jlpm
 # Build Typescript source

@@ -31,11 +31,13 @@
     "watch": "tsc -w"
   },
   "dependencies": {
+    "@blueprintjs/core": "^3.19.1",
     "@jupyterlab/application": "^1.0.0",
     "@jupyterlab/services": "^4.2.0",
-    "jupyterlab-topbar": "^0.4.0",
     "@types/lodash": "^4.14.145",
-    "@blueprintjs/core": "^3.19.1"
+    "@types/react-dom": "^16.9.4",
+    "jupyterlab-topbar": "^0.4.0",
+    "react-dom": "~16.8.4"
   },
   "devDependencies": {
     "rimraf": "^2.6.1",
