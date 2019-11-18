@@ -12,9 +12,6 @@ import { Session, Kernel } from "@jupyterlab/services";
 
 import { TabBarSvg } from '@jupyterlab/ui-components';
 import { ReactWidget } from '@jupyterlab/apputils';
-import {
-  InputGroup,
-} from '@blueprintjs/core/lib/cjs/components/forms/inputGroup';
 
 import { Widget } from '@phosphor/widgets';
 
@@ -78,28 +75,26 @@ export class NotifiyComponent extends React.Component<
    */
   render(): React.ReactNode {
     return (
-      <InputGroup
+      <input
         className="jupyterlab-notifier-settings-input"
         type="number"
-        onChange={ this.handleChange.bind(this) }
+        onChange={ this.handleChange }
         value={this.state.minExecutionTime.toString()}
       />
     );
   }
-
   /**
    * Handler for search input changes.
    */
   handleChange = (e: React.FormEvent<HTMLElement>) => {
-    let target = e.target as HTMLInputElement;
+    let target = e.currentTarget as HTMLInputElement;
     console.log('data');
     console.log('e', e);
-    console.log(typeof e.currentTarget);
-    console.log('currentTarget', e.currentTarget);
+    console.log('currentTarget', target.value);
     this.setState({
       minExecutionTime: parseInt(target.value)
     });
-    console.log(this.widget.settings);
+    this.widget.settings = this.state;
   };
 
 }
@@ -222,7 +217,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       models.forEach(( session: Session.IModel ) => {
         const newKernel: Kernel.IModel = session.kernel;
         const oldKernel: Kernel.IModel = _.get(kernelStatuses, [newKernel.id]);
-        if (true && _.get(newKernel, ['execution_state']) === 'idle') {
+        if (notifyWidget.settings.enabled && _.get(newKernel, ['execution_state']) === 'idle') {
 
           const newTimeString: string = _.get(newKernel, ['last_activity'], '0').toString();
           const newTime: number = Date.parse(newTimeString);
@@ -230,7 +225,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
           if (oldTime != newTime) {
             const elapsedTime: number = newTime - oldTime;
-            if (elapsedTime > 1 * 1000) {
+            if (elapsedTime > notifyWidget.settings.minExecutionTime * 1000) {
               spawnNotification(`${session.name} Finished Execution`, 'Execution complete', 'jupyter.png');
             }
           }
