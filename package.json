@@ -22,7 +22,7 @@
   "style": "style/index.css",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nareka/jupyterlab-notifier.git"
+    "url": "https://github.com/NarekA/jupterlab-notifier.git"
   },
   "scripts": {
     "build": "tsc",
