@@ -7,7 +7,7 @@
     "jupyterlab",
     "jupyterlab-extension"
   ],
-  "homepage": "https://github.com/nareka/jupyterlab-notifier",
+  "homepage": "https://github.com/NarekA/jupterlab-notifier",
   "bugs": {
     "url": "https://github.com/nareka/jupyterlab-notifier/issues"
   },
